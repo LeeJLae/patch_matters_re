@@ -10,3 +10,5 @@ divide/ovdet/checkpoints/
 divide/ovdet/data/
 divide/checkpoints/*
 !divide/checkpoints/.gitkeep
+divide/checkpoints/*
+!divide/checkpoints/.gitkeep
