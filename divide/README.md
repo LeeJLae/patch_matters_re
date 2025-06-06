@@ -1,15 +1,71 @@
 # Patch Matters: Training-free Fine-grained Image Caption Enhancement via Local Perception
+## 0단계 : 기본 Setting (Vessl) 
+# (1) pip3 install packaging
+# (2) pdf 25p : Create SSH key 부분
+# (3) pdf 25p : Add SSH key to your VESSL account 부분
+# (4) vessl workspace vscode
 
+## 📦 1단계: Miniconda 설치
 
-## Installation
+### 1. Miniconda 설치 스크립트 다운로드
 
 ```bash
-conda create -n patch_matters python==3.8.19
-
-pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu116
-
-pip install -r requirements.txt
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 ```
+
+### 2. 설치 스크립트 실행
+
+```bash
+bash Miniconda3-latest-Linux-x86_64.sh
+```
+
+#### 설치 중 선택 사항:
+
+* 라이선스 동의: `yes`
+* 설치 경로: 기본값 (`/root/miniconda3` 등)
+* `conda init` 실행 여부: `yes` 권장
+
+---
+
+## 🌀 2단계: 쉘 초기화
+
+설치 직후에는 다음 명령어로 환경 적용:
+
+```bash
+source ~/.bashrc
+```
+
+만약 여전히 `conda` 명령이 안 된다면:
+
+```bash
+eval "$(/root/miniconda3/bin/conda shell.bash hook)"
+```
+
+## Installation ##########################################
+# 아래꺼는 3.8 환경으로 3.9로 대체함#######################
+# 
+# 
+# conda create -n patch_matters python==3.8.19
+
+# 가상환경 활성화화
+# conda activate patch_matters 
+# pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu116
+# pip install -r requirements.txt
+```
+# #####################################################################
+## Installation NEW
+conda create -n patch_matters_39 python=3.9 -y
+conda activate patch_matters_39
+
+# PyTorch 1.13.1 + cu116 설치 (Python 3.9용 휠 사용)
+pip install https://download.pytorch.org/whl/cu116/torch-1.13.1%2Bcu116-cp39-cp39-linux_x86_64.whl
+pip install https://download.pytorch.org/whl/cu116/torchvision-0.14.1%2Bcu116-cp39-cp39-linux_x86_64.whl
+pip install torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu116
+
+# 그 다음에 requirements.txt 설치
+pip install -r requirements.txt
+
+# ########################################################################################
 
 ## Usage
 
