@@ -8,7 +8,7 @@ mkdir -p divide/ovdet/checkpoints
 touch divide/ovdet/checkpoints/test.py
 
 touch .gitignore
-echo "divide/ovdet/checkpoints/" >> .gitignore
+echo 'divide/ovdet/checkpoints/' >> .gitignore
 echo '!divide/ovdet/checkpoints/test.py' >> .gitignore
 
 git add .gitignore
@@ -20,13 +20,40 @@ git push
 ### 빈 폴더만 넣고 싶을떄
 mkdir -p divide/ovdet/checkpoints
 touch divide/ovdet/checkpoints/.gitkeep
-
-touch .gitignore
-echo "divide/ovdet/checkpoints/" >> .gitignore
+echo "divide/ovdet/checkpoints/*" >> .gitignore
 echo "!divide/ovdet/checkpoints/.gitkeep" >> .gitignore
-
-git add .gitignore
-git add -f divide/ovdet/checkpoints/.gitkeep
-
-git commit -m "add empty checkpoints folder using .gitkeep"
+git add .gitignore divide/ovdet/checkpoints/.gitkeep
+git commit -m "유지용 빈 폴더 추가"
 git push
+
+###  Git에 추적되지 않도록 무시하는 방법 (예: weights/, data/ 등)
+mkdir weights
+echo "weights/" >> .gitignore
+git add .gitignore
+git commit -m "ignore weights folder"
+git push
+
+###################################################################
+### git에 추적되지 않는 폴더와 함께 다른 폴더 내 update한 코드는 update되도록
+git add .gitignore      # .gitignore 파일 등록
+git add .               # 전체 수정사항 중, .gitignore에 명시되지 않은 것들만 추적
+git commit -m "new"     # 커밋
+git push                # GitHub로 푸시
+
+ex) # 1. 제외할 폴더를 .gitignore에 추가
+echo 'weights/' >> .gitignore
+echo 'logs/' >> .gitignore
+
+# 2. .gitignore 파일 Git에 등록
+git add .gitignore
+
+# 3. 수정/추가된 기존 코드들 Git에 등록 (추적 제외된 폴더는 자동으로 제외됨)
+git add .
+
+# 4. 커밋 메시지 작성
+git commit -m "Update code and exclude weights/logs folders"
+
+# 5. GitHub에 push
+git push
+
+###################################################################
