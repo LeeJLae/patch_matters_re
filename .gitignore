@@ -3,3 +3,4 @@ __pycache__/
 *.pth
 divide/ovdet/checkpoints/
 !divide/ovdet/checkpoints/test.py
+divide/ovdet/checkpoints/
