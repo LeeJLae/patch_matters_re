@@ -9,10 +9,24 @@ touch divide/ovdet/checkpoints/test.py
 
 touch .gitignore
 echo "divide/ovdet/checkpoints/" >> .gitignore
-echo "!divide/ovdet/checkpoints/test.py" >> .gitignore
+echo '!divide/ovdet/checkpoints/test.py' >> .gitignore
 
 git add .gitignore
 git add -f divide/ovdet/checkpoints/test.py
 
 git commit -m "add checkpoints folder and allow test.py"
+git push
+
+### 빈 폴더만 넣고 싶을떄
+mkdir -p divide/ovdet/checkpoints
+touch divide/ovdet/checkpoints/.gitkeep
+
+touch .gitignore
+echo "divide/ovdet/checkpoints/" >> .gitignore
+echo "!divide/ovdet/checkpoints/.gitkeep" >> .gitignore
+
+git add .gitignore
+git add -f divide/ovdet/checkpoints/.gitkeep
+
+git commit -m "add empty checkpoints folder using .gitkeep"
 git push
