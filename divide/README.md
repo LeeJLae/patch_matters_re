@@ -134,18 +134,18 @@ pip install mmcv==2.0.1 -f https://download.openmmlab.com/mmcv/dist/cu116/torch1
 pip install mmdet==3.1.0
 pip install mmengine==0.10.1
 
-#설치 확인
+# 한번만 하면 됨
+apt update
+apt install -y libgl1 
+
+# 설치 확인
 python -c "from mmdet.apis import DetInferencer; print('✅ DetInferencer import OK')"
 
 
 # 기타 필수 라이브러리
 pip install opencv-python-headless rich pillow tqdm
 pip install ftfy
-```
 
-
-
----
 
 ## 📁 4. 레포 구성
 
@@ -167,7 +167,7 @@ patchmatters-vessl/
 >
 > * `divide/ovdet/checkpoints/iter_90000.pth`
 > * `divide/ovdet/data/metadata/coco_clip_hand_craft_attn12.npy`
-
+ -> (변경 필요)  divide/data/metadata/coco_clip_hand_craft_attn12.npy
 ---
 
 ## ✏️ 5. generate\_four\_box.py 코드 수정 사항
