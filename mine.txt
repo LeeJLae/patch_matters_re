@@ -41,8 +41,8 @@ git commit -m "new"     # 커밋
 git push                # GitHub로 푸시
 
 ex) # 1. 제외할 폴더를 .gitignore에 추가
-echo 'weights/' >> .gitignore
-echo 'logs/' >> .gitignore
+echo 'divide/ovdet/checkpoints/' >> .gitignore
+echo 'divide/ovdet/data/' >> .gitignore
 
 # 2. .gitignore 파일 Git에 등록
 git add .gitignore

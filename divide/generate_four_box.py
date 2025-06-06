@@ -36,8 +36,8 @@ if __name__ == '__main__':
     args = arg.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-    inference = DetInferencer(model=args.model_config_file, weights=args.checkpoint_file, device='cuda:1')
-
+    # inference = DetInferencer(model=args.model_config_file, weights=args.checkpoint_file, device='cuda:1')
+    inference = DetInferencer(model=args.model_config_file, weights=args.checkpoint_file, device='cpu')
 
     image_files = [os.path.join(arg.image_folder, f) for f in os.listdir(arg.image_folder) if f.lower().endswith(('.png', '.jpg'))]
 

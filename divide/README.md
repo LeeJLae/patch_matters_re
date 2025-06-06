@@ -90,14 +90,13 @@ google drive에 올려놨습니다. 다운받으시고 아래 경로 확인 후�
 - instances_val2017_novel.json
 
 
-### Run
+### 이제... Divide Inference는 2가지임... 아래 2개를 다 돌려야함 
+### 순차적으로 우선 재윤이가 해준 generate_four_box.py를 해보자자
 
-```python
-python divide/generate_four_box.py --image_folder 'your image folder' --four_box_save_path 'four_box.json' --object_box_save_path 'object_box.json'
+1) python divide/generate_four_box.py --image_folder 'your image folder' --four_box_save_path 'four_box.json' --object_box_save_path 'object_box.json'
 
-python ovdet/get_main_box.py --image_folder 'your image folder' --object_box_save_path 'object_box.json' --main_box_save_path 'main_box.json'
+2) python ovdet/get_main_box.py --image_folder 'your image folder' --object_box_save_path 'object_box.json' --main_box_save_path 'main_box.json'
 
-python ovdet/get_main_box.py --image_folder 'your image folder' --object_box_save_path 'object_box.json' --main_box_save_path 'main_box.json'
 ```
 
 
