@@ -24,7 +24,14 @@ def seed_torch(seed=0):
 seed_torch(0)
 
 
-
+# if __name__ == '__main__':
+#     args = arg.parse_args()
+#     args.add_argument('--model_config_file', type=str, default='divide/configs/baron/ov_coco/baron_kd_faster_rcnn_r50_fpn_syncbn_90kx2.py')
+#     args.add_argument('--checkpoint_file', type=str, default='divide/checkpoints/this_repo_R-50-FPN_CLIP_iter_90000.pth')
+#     args.add_argument('--image_folder', type=str, help='Image folder')
+#     args.add_argument('--four_box_save_path', type=str, help='four box save path')
+#     args.add_argument('--object_box_save_path', type=str, help='object detect save path')
+#     args = arg.parse_args()
 
 if __name__ == '__main__':
     arg = argparse.ArgumentParser()
@@ -33,14 +40,17 @@ if __name__ == '__main__':
     arg.add_argument('--image_folder', type=str, help='Image folder')
     arg.add_argument('--four_box_save_path', type=str, help='four box save path')
     arg.add_argument('--object_box_save_path', type=str, help='object detect save path')
-    args = arg.parse_args()
+    
+    args = arg.parse_args() 
+
+
 
     os.environ["CUDA_VISIBLE_DEVICES"] = "1"
     # inference = DetInferencer(model=args.model_config_file, weights=args.checkpoint_file, device='cuda:1')
     inference = DetInferencer(model=args.model_config_file, weights=args.checkpoint_file, device='cpu')
 
-    image_files = [os.path.join(arg.image_folder, f) for f in os.listdir(arg.image_folder) if f.lower().endswith(('.png', '.jpg'))]
-
+    # image_files = [os.path.join(arg.image_folder, f) for f in os.listdir(arg.image_folder) if f.lower().endswith(('.png', '.jpg'))]
+    image_files = [os.path.join(args.image_folder, f) for f in os.listdir(args.image_folder) if f.lower().endswith(('.png', '.jpg'))]
     base_final_scores = 0.3
     i = 0
 
@@ -68,10 +78,10 @@ if __name__ == '__main__':
         final_result.append(data_result)
         obj_result.append(obj)
 
-    with open(arg.four_box_save_path, 'w', encoding='utf-8') as file:
+    with open(args.four_box_save_path, 'w', encoding='utf-8') as file:
         json.dump(final_result, file, ensure_ascii=False, indent=4)
 
     # if arg.object_box_save_path is not None:
     obj_result = {item['image']: item for item in obj_result}
-    with open(arg.object_box_save_path, 'w', encoding='utf-8') as file:
+    with open(args.object_box_save_path, 'w', encoding='utf-8') as file:
         json.dump(obj_result, file, ensure_ascii=False, indent=4)

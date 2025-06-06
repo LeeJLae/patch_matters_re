@@ -156,7 +156,7 @@ patchmatters-vessl/
 │   ├── checkpoints/  ← ✅ 학습된 모델 weight 저장
 │   ├── data/         ← ✅ 결과 json 저장 폴더 (없으면 생성 필요)
 │   ├── ovdet/        ← ✅ custom 모델 정의
-│   ├── sample_tools/
+│   ├── sample_tools/   # 걍 tools
 │   ├── true_box_sample.py
 │   └── generate_four_box.py
 ├── coco_image/
@@ -200,12 +200,13 @@ inference = DetInferencer(model=args.model_config_file, weights=args.checkpoint_
 ## ▶️ 6. 실행 명령어 (로컬 or 서버)
 
 ```bash
-python generate_four_box.py ^
-  --model_config_file "C:/patchmatters-vessl/divide/configs/baron/ov_coco/baron_kd_faster_rcnn_r50_fpn_syncbn_90kx2.py" ^
-  --checkpoint_file "C:/patchmatters-vessl/divide/ovdet/checkpoints/iter_90000.pth" ^
-  --image_folder "C:/patchmatters-vessl/coco_image/coco_sample_data_Image_Textualization" ^
-  --four_box_save_path "C:/patchmatters-vessl/divide/data/four_box.json" ^
-  --object_box_save_path "C:/patchmatters-vessl/divide/data/object_box.json"
+python /root/patch_matters_re-1/divide/generate_four_box.py \
+  --model_config_file "/root/patch_matters_re-1/divide/configs/baron/ov_coco/baron_kd_faster_rcnn_r50_fpn_syncbn_90kx2.py" \
+  --checkpoint_file "/root/patch_matters_re-1/divide/ovdet/checkpoints/iter_90000.pth" \
+  --image_folder "/root/patch_matters_re-1/coco_image/coco_sample_data_Image_Textualization" \
+  --four_box_save_path "/root/patch_matters_re-1/divide/checkpoints/four_box.json" \
+  --object_box_save_path "/root/patch_matters_re-1/divide/checkpoints/object_box.json"
+
 ```
 
 ---

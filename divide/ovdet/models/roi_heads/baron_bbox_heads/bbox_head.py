@@ -52,6 +52,7 @@ class BaronBBoxHead(BBoxHead):
                 "cls_bias only used for sigmoid logits"
             self.cls_bias = nn.Parameter(torch.ones(1) * cls_bias)
         if cls_embeddings_path is not None:
+            cls_embeddings_path = '/root/patch_matters_re-1/divide/data/metadata/coco_clip_hand_craft_attn12.npy'
             cls_embeddings = torch.from_numpy(
                 np.load(cls_embeddings_path)).float()
             assert self.num_classes == cls_embeddings.shape[0]

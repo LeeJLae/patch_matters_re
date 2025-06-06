@@ -11,7 +11,7 @@ class BoxesCache(nn.Module):
     def __init__(self, json_path, start_iter=10000,
                  num_proposals=300, nms_thr=0.1, score_thr=0.85, save=False):
         super(BoxesCache, self).__init__()
-        with open(json_path, 'r') as f:
+        with open('/root/patch_matters_re-1/divide/ovdet/data/coco/wusize/instances_train2017_base.json', 'r') as f:
             images_info = json.load(f)['images']
         num_images = len(images_info)
         self.image_id2ordered_id = {info['id']: ordered_id for ordered_id, info in enumerate(images_info)}
