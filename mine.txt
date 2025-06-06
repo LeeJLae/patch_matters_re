@@ -21,7 +21,7 @@ git push
 mkdir -p divide/ovdet/checkpoints
 touch divide/ovdet/checkpoints/.gitkeep
 echo "divide/ovdet/checkpoints/*" >> .gitignore
-echo "!divide/ovdet/checkpoints/.gitkeep" >> .gitignore
+echo '!divide/ovdet/checkpoints/.gitkeep' >> .gitignore
 git add .gitignore divide/ovdet/checkpoints/.gitkeep
 git commit -m "유지용 빈 폴더 추가"
 git push

@@ -8,3 +8,5 @@ divide/ovdet/checkpoints/
 !divide/ovdet/checkpoints/test.py
 divide/ovdet/checkpoints/
 divide/ovdet/data/
+divide/checkpoints/*
+!divide/checkpoints/.gitkeep
