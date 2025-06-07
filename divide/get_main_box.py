@@ -57,13 +57,33 @@ def vlm_model(vlm_model_path, device='cuda'):
     return model, vis_processors
 
 
-def generate_description(image_path, model, vis_processors, prompt=None):
+# def generate_description(image_path, model, vis_processors, prompt=None):
+#     image = Image.open(image_path).convert("RGB")
+#     inputs = vis_processors(images=image, return_tensors="pt").to(model.device, torch.float16)
+#     generated_ids = model.generate(**inputs
+#                                    )
+#     generated_text = vis_processors.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
+#     return generated_text
+###############################################################################################
+def generate_description(image_path, model, processor):
+    from PIL import Image
+    import torch
+
     image = Image.open(image_path).convert("RGB")
-    inputs = vis_processors(images=image, return_tensors="pt").to(model.device, torch.float16)
-    generated_ids = model.generate(**inputs
-                                   )
-    generated_text = vis_processors.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
+
+    prompt = "Describe this image in one sentence."
+
+    # 이미지와 텍스트 프롬프트 동시 입력
+    inputs = processor(images=image, text=prompt, return_tensors="pt").to(model.device, dtype=torch.float16)
+
+    # generate 호출
+    generated_ids = model.generate(**inputs, max_new_tokens=30)
+
+    # 텍스트 디코딩
+    generated_text = processor.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
     return generated_text
+
+###############################################################################################
 
 def find_common_objects(image, object, pipeline, prompt='Indirect'):
     if prompt == 'Direct':
@@ -217,16 +237,18 @@ if __name__ == '__main__':
     arg.add_argument('--image_folder', type=str, help='Image folder')
     arg.add_argument('--object_box_save_path', type=str, help='object detect path')
     arg.add_argument('--main_box_save_path', type=str, help='main box save path')
-    arg.add_argument('--llm_path', type=str, help='LLM model', default='cache/huggingface/hub/mate-llama-3.1-8b-instruct')
+    # arg.add_argument('--llm_path', type=str, help='LLM model', default='cache/huggingface/hub/mate-llama-3.1-8b-instruct')
+    arg.add_argument('--llm_path', type=str, help='LLM model', default='meta-llama/Meta-Llama-3-8B-Instruct')
+
     arg.add_argument('--vlm_model_path', type=str, help='vlm model path', default='Salesforce/blip2-opt-2.7b')
     arg.add_argument('--visual_save_folder', type=str, help='Save Visual Image folder', default='divide/main_box_visual')
     args = arg.parse_args()
 
 
-    all_path = arg.image_folder
-    save = arg.visual_save_folder
-    object_detection_path = arg.object_box_save_path
-    save_path = arg.main_box_save_path
+    all_path = args.image_folder
+    save = args.visual_save_folder
+    object_detection_path = args.object_box_save_path
+    save_path = args.main_box_save_path
 
 
     progress_path = f'ovdet/main_box_progress.json'
@@ -235,9 +257,9 @@ if __name__ == '__main__':
         object_detection = json.load(file)
 
 
-    vlm_model_path = arg.vlm_model_path
+    vlm_model_path = args.vlm_model_path
     lvlm_model, vis_processors = vlm_model(vlm_model_path)
-    llama_chat_hf = arg.llm_path
+    llama_chat_hf = args.llm_path
     pipeline = transformers.pipeline(
                 "text-generation",
                 model=llama_chat_hf,
@@ -270,7 +292,7 @@ if __name__ == '__main__':
             object = list(set(object_before))
         else:
             object = ['None']
-
+        
         text = generate_description(image_path, lvlm_model, vis_processors)
         # ic(text)
         print('Image path: ', img)
