@@ -12,3 +12,4 @@ divide/checkpoints/*
 !divide/checkpoints/.gitkeep
 divide/checkpoints/*
 !divide/checkpoints/.gitkeep
+Miniconda3-latest-Linux-x86_64.sh
