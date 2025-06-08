@@ -13,5 +13,6 @@
 # pip install ms-swift==2.5.2.post1
 
 # pip install "vllm>=0.2.0"
-
+(활용해야하는데.. 빈 문서임..!! 
+https://github.com/modelscope/ms-swift/blob/main/swift/llm/inference_vllm.py)
 # bash /root/patch_matters_re-1/description_generate/run.sh
