@@ -209,7 +209,7 @@ pip install --upgrade transformers
 mkdir -p ovdet
 
 
-############################# get_main_box.py에서 추가 코드 수정
+############################# get_main_box.py에서 추가 코드 수정1
 # def generate_description(image_path, model, vis_processors, prompt=None):
 #     image = Image.open(image_path).convert("RGB")
 #     inputs = vis_processors(images=image, return_tensors="pt").to(model.device, torch.float16)
@@ -236,8 +236,22 @@ def generate_description(image_path, model, processor):
     generated_text = processor.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
     return generated_text
 
-###############################################################################################
+############################# get_main_box.py에서 추가 코드 수정2
+# def re_match(input_string):
+#     matched_content = re.findall(r"\[.*?\]", input_string)
+#     cleaned_items = matched_content[0][1:-1].replace("'", "").strip()
 
+
+#     return [cleaned_items] if "," not in cleaned_items else [item.strip() for item in cleaned_items.split(",")]
+#################################################################################################################
+def re_match(common_objects):
+    pattern = r"\[(.*?)\]"
+    matched_content = re.findall(pattern, str(common_objects))
+    if not matched_content:
+        return []  # 또는 return common_objects, 필요에 따라 조정
+    cleaned_items = matched_content[0].replace("'", "").strip()
+    return [item.strip() for item in cleaned_items.split(",") if item.strip()]
+#################################################################################################################
 
 ▶️ 4. 실행 코드
 python /root/patch_matters_re-1/divide/get_main_box.py \

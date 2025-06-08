@@ -223,14 +223,21 @@ def equal_four_box(image_path):
     ]
     return boxes
 
-def re_match(input_string):
-    matched_content = re.findall(r"\[.*?\]", input_string)
-    cleaned_items = matched_content[0][1:-1].replace("'", "").strip()
+# def re_match(input_string):
+#     matched_content = re.findall(r"\[.*?\]", input_string)
+#     cleaned_items = matched_content[0][1:-1].replace("'", "").strip()
 
 
-    return [cleaned_items] if "," not in cleaned_items else [item.strip() for item in cleaned_items.split(",")]
-
-
+#     return [cleaned_items] if "," not in cleaned_items else [item.strip() for item in cleaned_items.split(",")]
+#################################################################################################################
+def re_match(common_objects):
+    pattern = r"\[(.*?)\]"
+    matched_content = re.findall(pattern, str(common_objects))
+    if not matched_content:
+        return []  # 또는 return common_objects, 필요에 따라 조정
+    cleaned_items = matched_content[0].replace("'", "").strip()
+    return [item.strip() for item in cleaned_items.split(",") if item.strip()]
+#################################################################################################################
 
 if __name__ == '__main__':
     arg = argparse.ArgumentParser()
