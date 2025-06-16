@@ -168,7 +168,7 @@ python /root/patch_matters_re-1/divide/generate_four_box.py \
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 
 bash Miniconda3-latest-Linux-x86_64.sh
-
+source /root/miniconda3/etc/profile.d/conda.sh
 source ~/.bashrc
 
 conda activate patch_matters_divide
