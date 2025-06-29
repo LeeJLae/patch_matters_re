@@ -1,6 +1,6 @@
 # divide 부분 돌리고 난 다음 description_generate의 multi_process.py를 먼저 돌려줘야함
 # 일단 새로운 가상 환경을 만듬
-# conda create -n patch_matters_aggregation python=3.9 -y
+# conda create -n patch_matters_aggregation python=3.10 -y
 
 # conda activate patch_matters_aggregation
 
@@ -10,12 +10,86 @@
 
 # pip install shapely
 
-# pip install "ms-swift[llm]==2.6.1"
+
+############ inode랑 용량 생각해서 우회하기
+# 1. 목적지 폴더 생성
+mkdir -p /opt/cache/huggingface
+mkdir -p /opt/cache/modelscope
+mkdir -p /opt/cache/torch
+
+# 2. 원래 캐시 삭제 및 링크 연결
+rm -rf ~/.cache/huggingface
+ln -s /opt/cache/huggingface ~/.cache/huggingface
+
+rm -rf ~/.cache/modelscope
+ln -s /opt/cache/modelscope ~/.cache/modelscope
+
+rm -rf ~/.cache/torch
+ln -s /opt/cache/torch ~/.cache/torch
+
+export TRANSFORMERS_CACHE=/opt/cache/huggingface
+export HF_HOME=/opt/cache/huggingface
+export MODEL_CACHE=/opt/cache/modelscope
+
+##########################################################
+mkdir -p /opt/pip_cache
+mkdir -p /opt/pip_target
+
+pip install "ms-swift[llm]==2.6.1" \
+    --cache-dir=/opt/pip_cache \
+    --target=/opt/pip_target
+
+##########################################################
+export PYTHONPATH=/opt/pip_target:$PYTHONPATH
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##########################################################
+pip install vllm==0.4.0 --force-reinstall
+
+export TMPDIR=/opt/tmp
+mkdir -p /opt/tmp /opt/pip_target /opt/pip_cache
+
+pip install -r /root/patch_matters_re-6/requirements.txt \
+    --cache-dir=/opt/pip_cache \
+    --target=/opt/pip_target \
+    --no-cache-dir
+
+
+# bash run.sh
+
+
+
+
+
+
+
+
+
+
+
+
 # pip install "transformers==4.47.1"
 # apt update && apt install -y git-lfs
 # git lfs install
+pip install numpy==1.26.4
 
-# bash run.sh
+
 
  sed -i '/"vision_feature_select_strategy": "default",/a\  "multimodal_projector_bias": false,' /root/.cache/modelscope/hub/models/swift/llava-v1.6-vicuna-7b-hf/config.json
 
