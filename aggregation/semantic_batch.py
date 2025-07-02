@@ -1,3 +1,14 @@
+import os
+import json
+import re
+from PIL import Image
+from shapely.geometry import box
+
+# 전역 변수로 JSON 로드 (파일 경로는 본인 환경에 맞게 수정)
+MAIN_BOX_DICT = json.load(open('/root/patch_matters_re-10/divide/data/main_box.json', 'r'))
+
+
+#########################################
 from PIL import Image
 import requests
 from transformers import AutoProcessor, AutoModel
@@ -1565,7 +1576,14 @@ class fusion:
                 # contra_list=[]
                 # for sim in contra:
                 #     contra_list.append(contra[sim])
-                max_contra=max(contra)
+                ###########################수정3 #######################
+                contra_filtered = [x for x in contra if x is not None]
+                if not contra_filtered:
+                    print("[WARNING] contra list is empty or all None")
+                    return None  # 혹은 continue, pass 등 흐름에 맞게 처리
+
+                max_contra = max(contra_filtered)
+                # max_contra=max(contra)
                 if (max_contra>0.3):
                     list_label=contra.index(max_contra)
                     supplement_contra.append(categories['For Contradictory Triples'][i][list_label])
@@ -1581,16 +1599,32 @@ class fusion:
         global_modified=self.batch_merge_mainbox(image_idx,batch_real_mainbox)
         return global_modified
     def batch_cal_main(self,image_idx):
-       
+
             
                 # image_src = Image.open('/data/users/ruotian_peng/dataset/mmvp/MMVP Images/'+data['image'].split('/')[-1]).convert('RGB')
+    ###################### 기존
+        # image_src=Image.open('../coco_image/coco_sample_data_Image_Textualization/'+image_idx['image'].split('/')[-1]).convert('RGB')
+        # width, height = image_src.size
+        # main_key='../coco_image/coco_sample_data_Image_Textualization/'+image_idx['image'].split('/')[-1]
+        # main_box=image_src.crop(image_idx['main_box'])
+        # dict_image={'5':main_box}
     
-        image_src=Image.open('../coco_image/coco_sample_data_Image_Textualization/'+image_idx['image'].split('/')[-1]).convert('RGB')
+            ########### 새로 추가한 코드 ##################
+        file_name = os.path.basename(image_idx['image'])
+        image_src = Image.open('../coco_image/coco_sample_data_Image_Textualization/' + file_name).convert('RGB')
         width, height = image_src.size
-        main_key='../coco_image/coco_sample_data_Image_Textualization/'+image_idx['image'].split('/')[-1]
-        main_box=image_src.crop(image_idx['main_box'])
-        dict_image={'5':main_box}
-        
+
+        # main_box.json에서 해당 이미지 이름이 포함된 key 검색
+        matched_key = next((k for k in MAIN_BOX_DICT if file_name in k), None)
+
+        if matched_key is None:
+            print(f"[WARNING] main_box not found for {file_name}")
+            return None
+
+        main_box_coords = MAIN_BOX_DICT[matched_key]['main_box']
+        main_box = image_src.crop(main_box_coords)
+        dict_image = {'5': main_box}
+    ####################    
        
         region_locations=[]
         region_descriptions=[]
@@ -1614,8 +1648,13 @@ class fusion:
         cleaned_regions = []
 
         # print(region_locations)
+        ################################### 수정 2
         rectangles = [box(region[0], region[1], region[2], region[3]) for region in region_locations]
         rectangles.append(box(0,0,width,height))
+        rectangles.append(box(*main_box_coords))
+        ########  ###
+
+        ###########
         # 初始化一个空列表来存储重叠面积和对应的区域对
         # 初始化一个空列表来存储每对区域的IoU
         iou_values = []
@@ -1654,8 +1693,11 @@ class fusion:
 
         batch_main_box=[]
         if iou_main[0][1]<0.4:
+            if len(region_descriptions) <= 4:
+                print(f"[WARNING] Less than 5 region descriptions for {file_name}")
+                return None
             print('iou<0.4')
-            batch_main_box.append([region_descriptions[4],dict_image,image_idx['global'],image_idx['image']])
+            batch_main_box.append([region_descriptions[4], dict_image, image_idx['global'], image_idx['image']])
             return batch_main_box
         else:
             return image_idx['global']
@@ -1696,7 +1738,16 @@ class fusion:
         image_src=Image.open('../coco_image/coco_sample_data_Image_Textualization/'+image_idx['image'].split('/')[-1]).convert('RGB')
         width, height = image_src.size
         main_key='../coco_image/coco_sample_data_Image_Textualization/'+image_idx['image'].split('/')[-1]
-        four_box = image_idx['four_box']
+        
+        
+        #four_box = image_idx['four_box']
+        
+        #####################수정 4
+        four_box = image_idx.get('four_box')
+        if four_box is None:
+            print("[WARNING] 'four_box' key not found. Skipping this image.")
+            return None
+    #######################################
         left_top = image_src.crop(four_box[0])
         right_top = image_src.crop(four_box[1])
         left_bottom = image_src.crop(four_box[2])
@@ -1911,6 +1962,7 @@ class fusion:
                     # contra_list=[]
                     # for sim in contra:
                     #     contra_list.append(contra[sim])
+                    
                     max_contra=max(contra)
 
                     if (max_contra>0.3):

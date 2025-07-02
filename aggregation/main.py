@@ -98,7 +98,7 @@ def process_images(args):
     # Setup model and processor
     start_time = time.time()
     llama3_7b_chat_hf="meta-llama/Llama-3.1-8B-Instruct"
-    llm = LLM(model=llama3_7b_chat_hf,max_model_len=40000,tensor_parallel_size=1,gpu_memory_utilization=0.87,dtype='float16')
+    llm = LLM(model=llama3_7b_chat_hf,max_model_len=16000,tensor_parallel_size=1,gpu_memory_utilization=0.87,dtype='float16')
     tokenizer = AutoTokenizer.from_pretrained(llama3_7b_chat_hf)
     blip_model = BLIPScore()
     error = blip_model.load_model()
@@ -132,6 +132,14 @@ def process_images(args):
             main_num.append(i)
             if len(batch_merge_main) ==10:
                 temp_new_global=Fusion.batch_merge_main(batch_merge_main)
+                ############# 수정 1
+                if temp_new_global is None:
+                    print(f"[WARNING] batch_merge_main returned None, skipping.")
+                    batch_merge_main = []
+                    main_num = []
+                    continue
+                ####################
+                
                 
                 for num_complete in range(len(temp_new_global)):
                     # batch_new_global.append(temp_new_global[num_complete].outputs[0].text)
@@ -145,10 +153,14 @@ def process_images(args):
             batch_new_global[i]=0
         if num-start_idx==end_idx - start_idx:
                 temp_new_global=Fusion.batch_merge_main(batch_merge_main)
-                
-                for num_complete in range(len(temp_new_global)):
-                    # batch_new_global.append(temp_new_global[num_complete].outputs[0].text)
-                    batch_new_global[main_num[num_complete]]=temp_new_global[num_complete].outputs[0].text
+                ############## 수정 2
+                if temp_new_global is None:
+                    print(f"[WARNING] batch_merge_main returned None at end flush, skipping.")
+                else:
+                ###########################
+                    for num_complete in range(len(temp_new_global)):
+                        # batch_new_global.append(temp_new_global[num_complete].outputs[0].text)
+                        batch_new_global[main_num[num_complete]]=temp_new_global[num_complete].outputs[0].text
         num+=1
     temp_json=[]
   
@@ -156,8 +168,10 @@ def process_images(args):
         if i in total_main_num:
             key['global']=batch_new_global[total_main_num.index(i)]
         temp_json.append(key)
-
-    output_file = os.path.join('new_global', f'orginal_description_chunk_{args.chunk_index}.json')
+    ###########3수정 3
+    output_dir = '/root/patch_matters_re-10/aggregation'
+    output_file = os.path.join(output_dir, f'orginal_description_chunk_{args.chunk_index}.json')
+    # output_file = os.path.join('new_global', f'orginal_description_chunk_{args.chunk_index}.json')
     with open(output_file, 'w') as json_file:
         json.dump(temp_json, json_file, indent=4)
     print(f"Results for chunk {args.chunk_index} saved to {output_file}")
