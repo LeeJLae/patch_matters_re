@@ -5,7 +5,7 @@ from PIL import Image
 from shapely.geometry import box
 
 # 전역 변수로 JSON 로드 (파일 경로는 본인 환경에 맞게 수정)
-MAIN_BOX_DICT = json.load(open('/root/patch_matters_re-10/divide/data/main_box.json', 'r'))
+MAIN_BOX_DICT = json.load(open('/root/patch_matters_re-13/aggregation/description_output_with_box.json', 'r'))
 
 
 #########################################
@@ -1614,16 +1614,33 @@ class fusion:
         image_src = Image.open('../coco_image/coco_sample_data_Image_Textualization/' + file_name).convert('RGB')
         width, height = image_src.size
 
-        # main_box.json에서 해당 이미지 이름이 포함된 key 검색
-        matched_key = next((k for k in MAIN_BOX_DICT if file_name in k), None)
+        matched_entry = None
+        for entry in MAIN_BOX_DICT:
+            if file_name in entry['image']:
+                matched_entry = entry
+                break
 
-        if matched_key is None:
+        if matched_entry is None:
             print(f"[WARNING] main_box not found for {file_name}")
             return None
 
-        main_box_coords = MAIN_BOX_DICT[matched_key]['main_box']
+        main_box_coords = matched_entry['main_box']
         main_box = image_src.crop(main_box_coords)
-        dict_image = {'5': main_box}
+        dict_image = {'5': main_box}           
+        # file_name = os.path.basename(image_idx['image'])
+        # image_src = Image.open('../coco_image/coco_sample_data_Image_Textualization/' + file_name).convert('RGB')
+        # width, height = image_src.size
+
+        # # main_box.json에서 해당 이미지 이름이 포함된 key 검색
+        
+        # matched_entry = next((entry for entry in MAIN_BOX_DICT if file_name in entry['image']), None)
+        # if matched_entry is None:
+        #     print(f"[WARNING] main_box not found for {file_name}")
+        #     return None
+
+        # main_box_coords = matched_entry['main_box']
+        # main_box = image_src.crop(main_box_coords)
+        # dict_image = {'5': main_box}
     ####################    
        
         region_locations=[]
@@ -1692,15 +1709,25 @@ class fusion:
         iou_main.append(('global (Region 5) and main (Region 0)', iou))
 
         batch_main_box=[]
-        if iou_main[0][1]<0.4:
-            if len(region_descriptions) <= 4:
+        if iou_main[0][1]<0.25:# 이것도 0.4에서 수정
+            #################### 수정
+            total_descriptions = sum(len(desc_list) for desc_list in region_descriptions)
+            if total_descriptions < 5 or len(region_descriptions) <= 4:
                 print(f"[WARNING] Less than 5 region descriptions for {file_name}")
-                return None
-            print('iou<0.4')
+                return None  # 혹은 적절한 기본값 반환
+            print('iou<0.25')
             batch_main_box.append([region_descriptions[4], dict_image, image_idx['global'], image_idx['image']])
             return batch_main_box
         else:
             return image_idx['global']
+            # if len(region_descriptions) <= 4:
+            #     print(f"[WARNING] Less than 5 region descriptions for {file_name}")
+            #     return None
+        #     print('iou<0.4')
+        #     batch_main_box.append([region_descriptions[4], dict_image, image_idx['global'], image_idx['image']])
+        #     return batch_main_box
+        # else:
+        #     return image_idx['global']
 
     def merge(self,image_idx,num):
         # llama2_7b_chat_hf="/data/users/ruotian_peng/pretrain/llama-3.1-8b-instruct"
@@ -1867,6 +1894,7 @@ class fusion:
         # 初始化一个空列表来存储重叠面积和对应的区域对
         # 初始化一个空列表来存储每对区域的IoU
         iou_values = []
+        
         # print(region_locations)
         # print(rectangles)
         # 分别计算左上和右上、左下和右下的区域与相邻区域的IoU
@@ -1901,7 +1929,7 @@ class fusion:
         label_iou=[]
         region_dict={'0':[0,1],'1':[1,3],'2':[2,3],'3':[0,2]}
         for i in iou_values:
-            if i[1]>0.4:
+            if i[1]>0.25: #0.4에서 수정
                 label_iou.append(1)
             else:
                 label_iou.append(0)
@@ -1962,8 +1990,12 @@ class fusion:
                     # contra_list=[]
                     # for sim in contra:
                     #     contra_list.append(contra[sim])
-                    
-                    max_contra=max(contra)
+                    ############## 수정
+                    contra = [c for c in contra if c is not None]
+                    if not contra:
+                        return None  # 혹은 적절한 default 처리
+                    max_contra = max(contra)
+                    # max_contra=max(contra)
 
                     if (max_contra>0.3):
                         list_label=contra.index(max_contra)
@@ -2038,7 +2070,12 @@ class fusion:
                     # contra_list=[]
                     # for sim in contra:
                     #     contra_list.append(contra[sim])
-                    max_contra=max(contra)
+                    ###############수정
+                    contra = [c for c in contra if c is not None]
+                    if not contra:
+                        return None  # 혹은 적절한 default 처리
+                    max_contra = max(contra)
+                    # max_contra=max(contra)
 
                     if (max_contra>0.3):
                         list_label=contra.index(max_contra)
@@ -2114,7 +2151,12 @@ class fusion:
                     supplement_same=categories['For Triples Describing the Same Thing'] 
                     supplement_all=categories['For Triples Describing the Same Thing'] 
                     for i,contra in enumerate(similarity_contra_list):
-                        max_contra=max(contra)
+                        ############수정
+                        contra = [c for c in contra if c is not None]
+                        if not contra:
+                            return None  # 혹은 적절한 default 처리
+                        max_contra = max(contra)
+                        # max_contra=max(contra)
 
                         if (max_contra>0.3):
                             list_label=contra.index(max_contra)

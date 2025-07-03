@@ -106,7 +106,9 @@ def process_images(args):
     import json
     with open(args.input_data, 'r') as f:
         data_image = json.load(f)
-
+    ############추가(for 실험용)
+    MAX_COUNT = 5
+    data_image = data_image[:MAX_COUNT]
 
     # Calculate the chunk size and slice the data accordingly
     total_images = len(data_image)
@@ -169,9 +171,10 @@ def process_images(args):
             key['global']=batch_new_global[total_main_num.index(i)]
         temp_json.append(key)
     ###########3수정 3
-    output_dir = '/root/patch_matters_re-10/aggregation'
+    output_dir = '/root/patch_matters_re-13/aggregation'
     output_file = os.path.join(output_dir, f'orginal_description_chunk_{args.chunk_index}.json')
     # output_file = os.path.join('new_global', f'orginal_description_chunk_{args.chunk_index}.json')
+    ############################
     with open(output_file, 'w') as json_file:
         json.dump(temp_json, json_file, indent=4)
     print(f"Results for chunk {args.chunk_index} saved to {output_file}")
