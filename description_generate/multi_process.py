@@ -78,8 +78,20 @@ def process_images(args):
         width, height = image.size
 
         # Generate local box descriptions (optional)
+        
         box_description = global_and_relation_descriptor.generate_5_self_box_description(key, img_src, prompt,args.chunk_index)
-
+        ############################수정 ###################
+        if len(box_description) > 0:
+            region_dict = box_description[0]
+            main_box = key['main_box']
+            main_desc_key = f'Region location:{main_box}. Region description'
+            if main_desc_key not in region_dict:
+                descs = global_and_relation_descriptor.single_box_description(
+                    img_src, main_box, prompt, args.chunk_index
+                )
+                
+        ##########################################
+        region_dict[main_desc_key] = descs
         # Prepare the result for this image
         temp['image'] = img_src
         temp['size'] = [height, width]
