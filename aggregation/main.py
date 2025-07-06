@@ -26,14 +26,17 @@ from transformers import AutoTokenizer
 from vllm import LLM, SamplingParams
 # Setup folder2_path based on the relative path
 import time
-
+import os
+os.environ['HF_HOME'] = '/opt/hf_cache'
+os.environ['TRANSFORMERS_CACHE'] = '/opt/hf_cache'
+os.environ['TORCH_HOME'] = '/opt/hf_cache'
+os.environ['XDG_CACHE_HOME'] = '/opt/hf_cache'  # lavis 전용
 
 class BLIPScore():
     def __init__(self):
         self.name = 'blip2_image_text_matching'
         self.model_type = 'coco'
         self.device = 'cuda'
-
     def load_model(self):
         error = None
         try:
@@ -67,6 +70,9 @@ class BLIPScore():
             similarity = itc_score[:,0].item()
 
             score = (probability + similarity) / 2
+                    # === 여기서 score 로그 찍기 ===
+            if score is None or isinstance(score, float) and (math.isnan(score) or math.isinf(score)):
+                print(f"[BLIP WARNING] BLIP score is abnormal: {score} | caption: {caption}")
         except Exception as e:
             error = str(e)
         return score,error
@@ -74,7 +80,7 @@ class BLIPScore():
 def get_parser():
     parser = argparse.ArgumentParser(description="Process images and generate descriptions using Llava model")
     parser.add_argument(
-        "--input_data", type=str, default='/Patch-Matters/aggregation/data/',
+        "--input_data", type=str, default='/root/Patch-Matters/aggregation/data/',
     )
     parser.add_argument(
         "--output_folder", type=str, default='./data', 
@@ -97,8 +103,17 @@ def get_parser():
 def process_images(args):
     # Setup model and processor
     start_time = time.time()
-    llama3_7b_chat_hf="meta-llama/Llama-3.1-8B-Instruct"
-    llm = LLM(model=llama3_7b_chat_hf,max_model_len=16000,tensor_parallel_size=1,gpu_memory_utilization=0.87,dtype='float16')
+    llama3_7b_chat_hf = "meta-llama/Meta-Llama-3-8B-Instruct"
+
+    llm = LLM(
+            model=llama3_7b_chat_hf,
+            tokenizer=llama3_7b_chat_hf,
+            download_dir=llama3_7b_chat_hf,
+            trust_remote_code=True,
+            max_model_len=2048,  # Adjusted for Llama 3.1
+            tensor_parallel_size=1,
+            gpu_memory_utilization=0.7,
+            dtype='float16') # max_model_len=40000 change to 8192 for llama3-8b
     tokenizer = AutoTokenizer.from_pretrained(llama3_7b_chat_hf)
     blip_model = BLIPScore()
     error = blip_model.load_model()
@@ -106,9 +121,7 @@ def process_images(args):
     import json
     with open(args.input_data, 'r') as f:
         data_image = json.load(f)
-    ############추가(for 실험용)
-    MAX_COUNT = 5
-    data_image = data_image[:MAX_COUNT]
+
 
     # Calculate the chunk size and slice the data accordingly
     total_images = len(data_image)
@@ -132,16 +145,8 @@ def process_images(args):
             batch_merge_main.append(temp)
             total_main_num.append(i)
             main_num.append(i)
-            if len(batch_merge_main) ==10:
+            if len(batch_merge_main) ==11:
                 temp_new_global=Fusion.batch_merge_main(batch_merge_main)
-                ############# 수정 1
-                if temp_new_global is None:
-                    print(f"[WARNING] batch_merge_main returned None, skipping.")
-                    batch_merge_main = []
-                    main_num = []
-                    continue
-                ####################
-                
                 
                 for num_complete in range(len(temp_new_global)):
                     # batch_new_global.append(temp_new_global[num_complete].outputs[0].text)
@@ -155,14 +160,10 @@ def process_images(args):
             batch_new_global[i]=0
         if num-start_idx==end_idx - start_idx:
                 temp_new_global=Fusion.batch_merge_main(batch_merge_main)
-                ############## 수정 2
-                if temp_new_global is None:
-                    print(f"[WARNING] batch_merge_main returned None at end flush, skipping.")
-                else:
-                ###########################
-                    for num_complete in range(len(temp_new_global)):
-                        # batch_new_global.append(temp_new_global[num_complete].outputs[0].text)
-                        batch_new_global[main_num[num_complete]]=temp_new_global[num_complete].outputs[0].text
+                
+                for num_complete in range(len(temp_new_global)):
+                    # batch_new_global.append(temp_new_global[num_complete].outputs[0].text)
+                    batch_new_global[main_num[num_complete]]=temp_new_global[num_complete].outputs[0].text
         num+=1
     temp_json=[]
   
@@ -170,11 +171,11 @@ def process_images(args):
         if i in total_main_num:
             key['global']=batch_new_global[total_main_num.index(i)]
         temp_json.append(key)
-    ###########3수정 3
-    output_dir = '/root/patch_matters_re-13/aggregation'
+
+
+    output_dir = 'new_global'
+    os.makedirs(output_dir, exist_ok=True)
     output_file = os.path.join(output_dir, f'orginal_description_chunk_{args.chunk_index}.json')
-    # output_file = os.path.join('new_global', f'orginal_description_chunk_{args.chunk_index}.json')
-    ############################
     with open(output_file, 'w') as json_file:
         json.dump(temp_json, json_file, indent=4)
     print(f"Results for chunk {args.chunk_index} saved to {output_file}")

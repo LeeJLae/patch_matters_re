@@ -5,10 +5,9 @@ from PIL import Image
 from shapely.geometry import box
 
 # 전역 변수로 JSON 로드 (파일 경로는 본인 환경에 맞게 수정)
-MAIN_BOX_DICT = json.load(open('/root/patch_matters_re-13/aggregation/description_output_with_box.json', 'r'))
+MAIN_BOX_DICT = json.load(open('/root/patch_matters_re-18/aggregation/description_output_with_box.json', 'r'))
 
 
-#########################################
 from PIL import Image
 import requests
 from transformers import AutoProcessor, AutoModel
@@ -33,7 +32,9 @@ import os
 # os.environ["CUDA_VISIBLE_DEVICES"] = str(os.environ["LOCAL_RANK"])
 import json
 class fusion:
-    def __init__(self, llm,tokenizer,blip_model,data_image):
+    def __init__(self, llm=None, tokenizer=None, blip_model=None, data_image=None):
+    ################################################## 기존
+    # def __init__(self, llm,tokenizer,blip_model,data_image):
         self.llm=llm
         self.tokenizer=tokenizer
         self.blip_model=blip_model
@@ -1252,6 +1253,24 @@ class fusion:
         
         return generated_text
     def batch_group_sameregion_sentence_main(self,region_descriptions):
+        ######################################debug2##########################################
+        # print("\n[DEBUG] Entered batch_group_sameregion_sentence_main()")
+        # print("[DEBUG] region_descriptions:", region_descriptions)
+
+        # if region_descriptions is None:
+        #     print("[ERROR] region_descriptions is None")
+        #     return None
+
+        # if not isinstance(region_descriptions, tuple) or len(region_descriptions) != 2:
+        #     print(f"[ERROR] region_descriptions is not a tuple of length 2 → {region_descriptions}")
+        #     return None
+
+        # _, region_dict = region_descriptions
+        # print("[DEBUG] region_dict keys:", list(region_dict.keys()))
+
+        # for key, val in region_dict.items():
+        #     print(f"[DEBUG] Region key: {key}, Type: {type(val)}")        
+        #######################################################################
         system = """
         You are a language modeler tasked with analyzing three passages describing the same area of a picture. Your goal is to process these descriptions step by step, reasoning through each task logically and systematically. Please follow the steps outlined below and directly output the final results of Step 4 without providing explanations or additional words.
 
@@ -1492,8 +1511,25 @@ class fusion:
             
             return generated_text
     def batch_merge_main(self,image_idx):
-    
-            
+        ###################################3수정##############################
+        print("\n[DEBUG] ===== image_idx 전체 구조 출력 =====")
+        for i, item in enumerate(image_idx):
+            print(f"\n[DEBUG] image_idx[{i}] type: {type(item)}")
+            if isinstance(item, (list, tuple)):
+                print(f"[DEBUG]  └ length: {len(item)}")
+                for j, subitem in enumerate(item):
+                    print(f"[DEBUG]    └ image_idx[{i}][{j}] type: {type(subitem)}")
+                    if isinstance(subitem, dict):
+                        print(f"[DEBUG]       └ dict keys: {list(subitem.keys())}")
+                    elif isinstance(subitem, list):
+                        print(f"[DEBUG]       └ list length: {len(subitem)}")
+                    elif isinstance(subitem, str):
+                        print(f"[DEBUG]       └ string (first 30 chars): {subitem[:30]}")
+                    else:
+                        print(f"[DEBUG]       └ value: {subitem}")
+            else:
+                print(f"[WARNING] image_idx[{i}] is not a list or tuple: {item}")
+         ##################################################################################   
                 # image_src = Image.open('/data/users/ruotian_peng/dataset/mmvp/MMVP Images/'+data['image'].split('/')[-1]).convert('RGB')
     
  
@@ -1525,19 +1561,87 @@ class fusion:
                 else:
                     similarity_list.append(0)  
             return similarity_list
-        batch_temp_group=self.batch_group_sameregion_sentence_main(image_idx)
+        ########################### 기존 
+        # batch_temp_group=self.batch_group_sameregion_sentence_main(image_idx)
+        #############################수정___none type 반환하는 문제
+        print("\n[DEBUG] Start checking image_idx structure")
+        for i, item in enumerate(image_idx):
+            print(f"[DEBUG] image_idx[{i}] = {item}, type = {type(item)}")
+            
+            if isinstance(item, (list, tuple)):
+                print(f"  [DEBUG] image_idx[{i}] length = {len(item)}")
+                for j, subitem in enumerate(item):
+                    print(f"    [DEBUG] image_idx[{i}][{j}] = {subitem}, type = {type(subitem)}")
+
+                    if isinstance(subitem, dict):
+                        print(f"      [DEBUG] keys = {list(subitem.keys())}")
+                    elif isinstance(subitem, list):
+                        print(f"      [DEBUG] list length = {len(subitem)}")
+                        if subitem and isinstance(subitem[0], str):
+                            print(f"        [DEBUG] First string = {subitem[0]}")
+                        elif subitem and isinstance(subitem[0], list):
+                            print(f"        [DEBUG] Nested list: {subitem[0]}")
+            else:
+                print(f"  [WARNING] image_idx[{i}] is not list or tuple")
+
+        
+        region_descriptions = []
+
+        for i in range(len(image_idx)):
+            # ✅ 수정된 구조 파싱
+            try:
+                region_text_list = image_idx[i][0]
+                # ✅ 리스트 안에 또 리스트가 있는 경우 (ex: [['desc1', 'desc2', 'desc3']]) 풀기
+                if isinstance(region_text_list, list) and len(region_text_list) == 1 and isinstance(region_text_list[0], list):
+                    region_text_list = region_text_list[0]
+            except Exception as e:
+                print(f"[ERROR] image_idx[{i}] 구조가 잘못됨: {e}")
+                continue
+
+            if not isinstance(region_text_list, list):
+                print(f"[ERROR] image_idx[{i}][0] is not a list: {region_text_list}")
+                continue
+
+            if len(region_text_list) < 3:
+                print(f"[ERROR] Not enough region_texts at index {i}: {region_text_list}")
+                continue
+
+            # ✅ 정답 구조로 wrapping
+            region_descriptions.append([region_text_list])
+
+            # 디버깅 출력
+            print(f"[DEBUG] region_descriptions[{i}] = {region_descriptions[i]}")
+            try:
+                test_access = region_descriptions[i][0][0][1]
+                print(f"[DEBUG] access check: region_descriptions[{i}][0][0][1] = {test_access}")
+            except Exception as e:
+                print(f"[ERROR] Accessing region_descriptions[{i}][0][0][1] failed: {e}")
+                continue
+
+        # ✅ 최종 호출
+        batch_temp_group = self.batch_group_sameregion_sentence_main(region_descriptions)
+
+        ####################################################################
         batch_supple=[]
         for num_merge in range(len(image_idx)):
-        
-            
+
+            #####################[추가] image_idx[num_merge][1]이 None이거나 인덱스 에러 방지를 위한 예외 처리
+            if (
+                not isinstance(image_idx[num_merge], (list, tuple)) or
+                len(image_idx[num_merge]) <= 1 or
+                image_idx[num_merge][1] is None
+            ):
+                print(f"[WARNING] Skipping num_merge={num_merge} due to invalid or missing merged image")
+                continue        
+            #########################################################################################3
             # region_dict_temp={'1': region_dict[str(number_iou)][0],'2': region_dict[str(number_iou)][1]}
             categories = {
                 'For Triples Describing the Same Thing': [],
                 'For Contradictory Triples': [],
                 'For Unique Triples': []
             }
-        
             same_thing_pattern = re.findall(r'- Group \d+ Combined Description: "(.*?)"', batch_temp_group[num_merge].outputs[0].text)
+
             categories['For Triples Describing the Same Thing'].extend(same_thing_pattern)
 
             # 提取 "矛盾的" 内容
@@ -1563,9 +1667,32 @@ class fusion:
                 for triple in categories['For Contradictory Triples']:
                     # region_1=re.findall('Region \d', triple[0])[0]
                     # region_2=re.findall('Region \d', triple[1])[0]
-                    similarity_contra=cal_similarity_same(triple,image_idx[num_merge][0][1][str(4+1)])
-                    similarity_contra_list.append(similarity_contra)
-            similarity_unique=cal_similarity_same(categories['For Unique Triples'],image_idx[num_merge][0][1][str(4+1)] )
+                    ############################################## 기존
+                    # similarity_contra=cal_similarity_same(triple,image_idx[num_merge][0][1][str(4+1)])
+                    # similarity_contra_list.append(similarity_contra)
+                    #######################################수정
+                    merge_dict = image_idx[num_merge][0][1]
+
+                    if isinstance(merge_dict, dict):
+                        if str(5) in merge_dict:
+                            selected_merge_image = merge_dict[str(5)]
+                            similarity_contra = cal_similarity_same(triple, selected_merge_image)
+                            similarity_contra_list.append(similarity_contra)
+                            print(f"[DEBUG] merge img type: {type(selected_merge_image)}")
+                        else:
+                            print(f"[WARNING] key '5' not in image_idx[{num_merge}][1]")
+                            similarity_contra_list.append([0])
+                    else:
+                        print(f"[ERROR] image_idx[{num_merge}][1] is not a dict")
+                        similarity_contra_list.append([0])
+                    ################################################################
+                       
+                    ###############################추가_debug1.log################################
+                    print(f"[DEBUG] Contradictory triple group: {triple}")
+                    print(f"[DEBUG] merge img type: {type(selected_merge_image)}")
+                    print(f"[DEBUG] similarity_contra: {similarity_contra}")
+                    #####################################################################
+            similarity_unique=cal_similarity_same(categories['For Unique Triples'],image_idx[num_merge][1][str(4+1)] )
             # similarity_same=cal_similarity_same(categories['For Triples Describing the Same Thing'],merge_patch )
             supplement_all=[]
             supplement_contra=[]
@@ -1576,14 +1703,7 @@ class fusion:
                 # contra_list=[]
                 # for sim in contra:
                 #     contra_list.append(contra[sim])
-                ###########################수정3 #######################
-                contra_filtered = [x for x in contra if x is not None]
-                if not contra_filtered:
-                    print("[WARNING] contra list is empty or all None")
-                    return None  # 혹은 continue, pass 등 흐름에 맞게 처리
-
-                max_contra = max(contra_filtered)
-                # max_contra=max(contra)
+                max_contra=max(contra)
                 if (max_contra>0.3):
                     list_label=contra.index(max_contra)
                     supplement_contra.append(categories['For Contradictory Triples'][i][list_label])
@@ -1593,27 +1713,23 @@ class fusion:
                 if sim>0.3:
                     supplement_unique.append(categories['For Unique Triples'][i])
                     supplement_all.append(re.sub(r'\s*\(Description \d+\)', '', categories['For Unique Triples'][i]))
+                    #############기존
             batch_supple.append(supplement_all)
+############################### 추가            
+            if supplement_all:  # 유효한 결과만 append
+                batch_supple.append(supplement_all)
+            else:
+                print(f"[WARNING] No valid supplement found for num_merge={num_merge}, skipping.")
+                #################################
         batch_real_mainbox=self.batch_merge_sameregion_main(image_idx,batch_supple)
 
         global_modified=self.batch_merge_mainbox(image_idx,batch_real_mainbox)
         return global_modified
     def batch_cal_main(self,image_idx):
-
-            
-                # image_src = Image.open('/data/users/ruotian_peng/dataset/mmvp/MMVP Images/'+data['image'].split('/')[-1]).convert('RGB')
-    ###################### 기존
-        # image_src=Image.open('../coco_image/coco_sample_data_Image_Textualization/'+image_idx['image'].split('/')[-1]).convert('RGB')
-        # width, height = image_src.size
-        # main_key='../coco_image/coco_sample_data_Image_Textualization/'+image_idx['image'].split('/')[-1]
-        # main_box=image_src.crop(image_idx['main_box'])
-        # dict_image={'5':main_box}
-    
-            ########### 새로 추가한 코드 ##################
+        ###################추가 및 수정
         file_name = os.path.basename(image_idx['image'])
         image_src = Image.open('../coco_image/coco_sample_data_Image_Textualization/' + file_name).convert('RGB')
         width, height = image_src.size
-
         matched_entry = None
         for entry in MAIN_BOX_DICT:
             if file_name in entry['image']:
@@ -1625,23 +1741,16 @@ class fusion:
             return None
 
         main_box_coords = matched_entry['main_box']
+            
+                # image_src = Image.open('/data/users/ruotian_peng/dataset/mmvp/MMVP Images/'+data['image'].split('/')[-1]).convert('RGB')
+    
+        # image_src=Image.open('../coco_image/coco_sample_data_Image_Textualization/'+image_idx['image'].split('/')[-1]).convert('RGB')
+        width, height = image_src.size
+        main_key='../coco_image/coco_sample_data_Image_Textualization/'+image_idx['image'].split('/')[-1]
+        # main_box=image_src.crop(image_idx['main_box'])
         main_box = image_src.crop(main_box_coords)
-        dict_image = {'5': main_box}           
-        # file_name = os.path.basename(image_idx['image'])
-        # image_src = Image.open('../coco_image/coco_sample_data_Image_Textualization/' + file_name).convert('RGB')
-        # width, height = image_src.size
-
-        # # main_box.json에서 해당 이미지 이름이 포함된 key 검색
-        
-        # matched_entry = next((entry for entry in MAIN_BOX_DICT if file_name in entry['image']), None)
-        # if matched_entry is None:
-        #     print(f"[WARNING] main_box not found for {file_name}")
-        #     return None
-
-        # main_box_coords = matched_entry['main_box']
-        # main_box = image_src.crop(main_box_coords)
-        # dict_image = {'5': main_box}
-    ####################    
+        dict_image={'5':main_box}
+        ###############################################################
        
         region_locations=[]
         region_descriptions=[]
@@ -1665,13 +1774,10 @@ class fusion:
         cleaned_regions = []
 
         # print(region_locations)
-        ################################### 수정 2
         rectangles = [box(region[0], region[1], region[2], region[3]) for region in region_locations]
         rectangles.append(box(0,0,width,height))
+        #################################3 추가
         rectangles.append(box(*main_box_coords))
-        ########  ###
-
-        ###########
         # 初始化一个空列表来存储重叠面积和对应的区域对
         # 初始化一个空列表来存储每对区域的IoU
         iou_values = []
@@ -1709,25 +1815,15 @@ class fusion:
         iou_main.append(('global (Region 5) and main (Region 0)', iou))
 
         batch_main_box=[]
-        if iou_main[0][1]<0.25:# 이것도 0.4에서 수정
-            #################### 수정
-            total_descriptions = sum(len(desc_list) for desc_list in region_descriptions)
-            if total_descriptions < 5 or len(region_descriptions) <= 4:
-                print(f"[WARNING] Less than 5 region descriptions for {file_name}")
-                return None  # 혹은 적절한 기본값 반환
-            print('iou<0.25')
-            batch_main_box.append([region_descriptions[4], dict_image, image_idx['global'], image_idx['image']])
+        if iou_main[0][1]<0.4:
+            print('iou<0.4')
+            batch_main_box.append([region_descriptions[4],dict_image,image_idx['global'],image_idx['image']])
             return batch_main_box
         else:
-            return image_idx['global']
-            # if len(region_descriptions) <= 4:
-            #     print(f"[WARNING] Less than 5 region descriptions for {file_name}")
-            #     return None
-        #     print('iou<0.4')
-        #     batch_main_box.append([region_descriptions[4], dict_image, image_idx['global'], image_idx['image']])
-        #     return batch_main_box
-        # else:
-        #     return image_idx['global']
+            image_key = os.path.basename(image_idx['image']).split('.')[0]  # '000000248382' 추출
+            return (image_key, image_idx['global'])  # 튜플 형태로 반환
+            ########기존
+            #return image_idx['global']
 
     def merge(self,image_idx,num):
         # llama2_7b_chat_hf="/data/users/ruotian_peng/pretrain/llama-3.1-8b-instruct"
@@ -1765,16 +1861,7 @@ class fusion:
         image_src=Image.open('../coco_image/coco_sample_data_Image_Textualization/'+image_idx['image'].split('/')[-1]).convert('RGB')
         width, height = image_src.size
         main_key='../coco_image/coco_sample_data_Image_Textualization/'+image_idx['image'].split('/')[-1]
-        
-        
-        #four_box = image_idx['four_box']
-        
-        #####################수정 4
-        four_box = image_idx.get('four_box')
-        if four_box is None:
-            print("[WARNING] 'four_box' key not found. Skipping this image.")
-            return None
-    #######################################
+        four_box = image_idx['four_box']
         left_top = image_src.crop(four_box[0])
         right_top = image_src.crop(four_box[1])
         left_bottom = image_src.crop(four_box[2])
@@ -1894,7 +1981,6 @@ class fusion:
         # 初始化一个空列表来存储重叠面积和对应的区域对
         # 初始化一个空列表来存储每对区域的IoU
         iou_values = []
-        
         # print(region_locations)
         # print(rectangles)
         # 分别计算左上和右上、左下和右下的区域与相邻区域的IoU
@@ -1929,7 +2015,7 @@ class fusion:
         label_iou=[]
         region_dict={'0':[0,1],'1':[1,3],'2':[2,3],'3':[0,2]}
         for i in iou_values:
-            if i[1]>0.25: #0.4에서 수정
+            if i[1]>0.4:
                 label_iou.append(1)
             else:
                 label_iou.append(0)
@@ -1990,12 +2076,7 @@ class fusion:
                     # contra_list=[]
                     # for sim in contra:
                     #     contra_list.append(contra[sim])
-                    ############## 수정
-                    contra = [c for c in contra if c is not None]
-                    if not contra:
-                        return None  # 혹은 적절한 default 처리
-                    max_contra = max(contra)
-                    # max_contra=max(contra)
+                    max_contra=max(contra)
 
                     if (max_contra>0.3):
                         list_label=contra.index(max_contra)
@@ -2070,12 +2151,7 @@ class fusion:
                     # contra_list=[]
                     # for sim in contra:
                     #     contra_list.append(contra[sim])
-                    ###############수정
-                    contra = [c for c in contra if c is not None]
-                    if not contra:
-                        return None  # 혹은 적절한 default 처리
-                    max_contra = max(contra)
-                    # max_contra=max(contra)
+                    max_contra=max(contra)
 
                     if (max_contra>0.3):
                         list_label=contra.index(max_contra)
@@ -2151,12 +2227,7 @@ class fusion:
                     supplement_same=categories['For Triples Describing the Same Thing'] 
                     supplement_all=categories['For Triples Describing the Same Thing'] 
                     for i,contra in enumerate(similarity_contra_list):
-                        ############수정
-                        contra = [c for c in contra if c is not None]
-                        if not contra:
-                            return None  # 혹은 적절한 default 처리
-                        max_contra = max(contra)
-                        # max_contra=max(contra)
+                        max_contra=max(contra)
 
                         if (max_contra>0.3):
                             list_label=contra.index(max_contra)

@@ -12,17 +12,17 @@ do
     gpu_id=$chunk_index  # Assuming chunk_index corresponds to a GPU (e.g., 0, 1, 2 for 3 GPUs)
     
     # Set CUDA_VISIBLE_DEVICES to assign a unique GPU to each process
-    CUDA_VISIBLE_DEVICES=$gpu_id nohup python3 /root/patch_matters_re-13/aggregation/main.py \
-        --input_data /root/patch_matters_re-13/aggregation/description_output_with_box.json \
-        --output_folder /root/patch_matters_re-13/aggregation \
+    CUDA_VISIBLE_DEVICES=$gpu_id nohup python3 /root/patch_matters_re-19/aggregation/main.py \
+        --input_data /root/patch_matters_re-19/aggregation/description_output_with_box.json \
+        --output_folder /root/patch_matters_re-19/aggregation/result \
         --chunk_index $chunk_index \
         --chunk_num $chunk_num \
         --node_index $node_index \
-        --node_num $node_num > /root/patch_matters_re-13/aggregation/$chunk_index.log 2>&1 &
+        --node_num $node_num > /root/patch_matters_re-19/aggregation/$chunk_index.log 2>&1 &
 done
 
 wait
 
-python3 /root/patch_matters_re-13/aggregation/combine.py \
-    --folder_path /root/patch_matters_re-13/aggregation \
-    --output_file /root/patch_matters_re-13/aggregation/aggregation_output.json
+python3 /root/patch_matters_re-19/aggregation/combine.py \
+    --folder_path /root/patch_matters_re-19/aggregation/result \
+    --output_file /root/patch_matters_re-19/aggregation/result/aggregation_output.json

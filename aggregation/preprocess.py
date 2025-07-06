@@ -31,9 +31,9 @@
 import json
 import os
 
-desc_path = "/root/patch_matters_re-13/description_generate/description_output.json"
-boxinfo_path = "/root/patch_matters_re-13/ovdet/main_box_progress.json"
-output_path = "/root/patch_matters_re-13/aggregation/description_output_with_box.json"
+desc_path = "/root/patch_matters_re-18/description_generate/description_output.json"
+boxinfo_path = "/root/patch_matters_re-18/ovdet/main_box_progress.json"
+output_path = "/root/patch_matters_re-18/aggregation/description_output_with_box.json"
 
 with open(desc_path, 'r') as f:
     desc_data = json.load(f)

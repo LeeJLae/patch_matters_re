@@ -73,7 +73,16 @@ class PyramidCaption:
             right_bottom_list=[{'query': 'Describe this image in detail.', 'images': ['temp_image/'+str(chunk_index)+'right_bottom'+'.png']}for _ in range(num_responses)]
             # 合并四个列表
             combined_list = left_top_list + right_top_list + left_bottom_list + right_bottom_list
-        
+########################################################추가
+            main.save('temp_image/'+str(chunk_index)+'main'+'.png')
+            main_list = [{'query': 'Describe this image in detail.', 'images': ['temp_image/'+str(chunk_index)+'main'+'.png']} for _ in range(num_responses)]
+            main_resp = inference_vllm(self.generator, self.template, main_list, generation_info=generation_info, use_tqdm=True)
+            main_responses = [main_resp[0]['response'].replace("\n\n", " ")+'n',
+                            main_resp[1]['response'].replace("\n\n", " ")+'n',
+                            main_resp[2]['response'].replace("\n\n", " ")+'n']
+            main_desc_key = f'Region location:{main_box}. Region description'
+            dict_temp[main_desc_key] = main_responses
+#######################################################################
             resp_list = inference_vllm(self.generator, self.template, combined_list, generation_info=generation_info, use_tqdm=True)
     
             print(generation_info)
