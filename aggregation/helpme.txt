@@ -273,3 +273,24 @@ image_idx[i] = [
 image_idx[i]는 [region_texts, region_dict, full_caption, image_path] 구조.
 
 image_idx[i][0]에서 바로 desc1~3 리스트를 얻을 수 있음.
+
+######################################
+mkdir -p /opt/cache/huggingface
+mkdir -p /opt/cache/modelscope
+mkdir -p /opt/cache/torch
+
+rm -rf ~/.cache/huggingface
+ln -s /opt/cache/huggingface ~/.cache/huggingface
+
+rm -rf ~/.cache/modelscope
+ln -s /opt/cache/modelscope ~/.cache/modelscope
+
+rm -rf ~/.cache/torch
+ln -s /opt/cache/torch ~/.cache/torch
+
+# 환경변수도 함께 설정 (bash 세션에 반영)
+export TRANSFORMERS_CACHE=/opt/cache/huggingface
+export HF_HOME=/opt/cache/huggingface
+export MODEL_CACHE=/opt/cache/modelscope
+export TORCH_HOME=/opt/cache/torch
+##################################################

@@ -2052,6 +2052,15 @@ class fusion:
                 if label_iou[number_iou]==1:
                     index_iou.append(number_iou)
                     temp_group=batch_group[id_group_two].outputs[0].text
+                    #########자체 디버깅##############################
+                    print(f"[DEBUG] id_group_two: {id_group_two}, len(batch_group): {len(batch_group)}")
+                    if id_group_two >= len(batch_group):
+                        print(f"[ERROR] id_group_two={id_group_two} 가 batch_group 범위를 초과했습니다.")
+                        continue  # 또는 return None, raise 에러 등
+                    if not batch_group[id_group_two].outputs:
+                        print(f"[ERROR] batch_group[{id_group_two}].outputs 비어있음")
+                        continue                    
+                    ##################################################
                     id_group_two+=1
                     region_dict_temp={'1': region_dict[str(number_iou)][0],'2': region_dict[str(number_iou)][1]}
                     categories = {

@@ -103,11 +103,13 @@ def get_parser():
 def process_images(args):
     # Setup model and processor
     start_time = time.time()
-    llama3_7b_chat_hf="meta-llama/Llama-3.1-8B-Instruct"
+    llama3_7b_chat_hf = "meta-llama/Meta-Llama-3-8B-Instruct"
+
     llm = LLM(
             model=llama3_7b_chat_hf,
             tokenizer=llama3_7b_chat_hf,
-            download_dir=llama3_7b_chat_hf,
+            download_dir="/opt/hf_cache",
+            ########### 기존######## download_dir=llama3_7b_chat_hf,
             trust_remote_code=True,
             max_model_len=2048,  # Adjusted for Llama 3.1
             tensor_parallel_size=1,
